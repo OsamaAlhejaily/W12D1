@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Image Filter API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 40px auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        input[type="file"],
+        select,
+        input[type="text"],
+        button {
+            padding: 10px;
+            font-size: 16px;
+        }
+
+        #resultImage {
+            margin-top: 20px;
+            display: none;
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+
+        .api-key-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .api-key-group input {
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+    <h2>Upload Image & Apply Filter</h2>
+    <form id="uploadForm">
+        <input type="file" id="image" name="image" required>
+
+        <select id="filter">
+            <option value="grayscale">Grayscale</option>
+            <option value="sepia">Sepia</option>
+        </select>
+
+        <div class="api-key-group">
+            <input type="text" id="apiKey" placeholder="API Key" required>
+            <button type="button" id="getApiKeyBtn">Get API Key</button>
+        </div>
+
+        <button type="submit">Upload</button>
+    </form>
+
+    <h3>Result:</h3>
+    <img id="resultImage" style="max-width: 100%;"/>
+
+    <script>
+        // Handle image upload
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fileInput = document.getElementById('image');
+            const filter = document.getElementById('filter').value;
+            const apiKey = document.getElementById('apiKey').value;
+
+            if (!fileInput.files.length) {
+                alert("Please select an image.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('image', fileInput.files[0]);
+
+            const response = await fetch('/api/images/process?filter=' + filter, {
+                method: 'POST',
+                headers: { 'X-Api-Key': apiKey },
+                body: formData
+            });
+
+            if (response.ok) {
+                const blob = await response.blob();
+                const resultImg = document.getElementById('resultImage');
+                resultImg.src = URL.createObjectURL(blob);
+                resultImg.style.display = "block";
+            } else {
+                alert('Error: ' + await response.text());
+            }
+        });
+
+        // Handle API Key generation
+        document.getElementById('getApiKeyBtn').addEventListener('click', async () => {
+            const response = await fetch('/api/apikeys/generate', {
+                method: 'POST'
+            });
+
+            if (response.ok) {
+                const apiKey = await response.text();
+                document.getElementById('apiKey').value = apiKey;
+            } else {
+                alert("Failed to generate API key.");
+            }
+        });
+    </script>
+</body>
+</html>

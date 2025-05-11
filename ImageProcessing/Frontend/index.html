@@ -1,0 +1,52 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Image Filter Upload</title>
+</head>
+<body>
+    <h1>Upload Image and Apply Filter</h1>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <label for="image">Select image:</label>
+        <input type="file" id="image" name="image" required><br><br>
+        <label for="filter">Choose filter:</label>
+        <select id="filter" name="filter">
+            <option value="grayscale">Grayscale</option>
+            <option value="sepia">Sepia</option>
+        </select><br><br>
+        <label for="apikey">API Key:</label>
+        <input type="text" id="apikey" name="apikey" required><br><br>
+        <button type="submit">Upload and Process</button>
+    </form>
+    <h2>Processed Image:</h2>
+    <img id="resultImage" src="" alt="Processed Image" style="max-width:500px;"><br>
+
+    <script>
+        document.getElementById("uploadForm").addEventListener("submit", async function(event) {
+            event.preventDefault();
+            const formData = new FormData();
+            const fileInput = document.getElementById("image");
+            const filter = document.getElementById("filter").value;
+            const apiKey = document.getElementById("apikey").value;
+
+            formData.append("image", fileInput.files[0]);
+
+            const response = await fetch(`/api/images/process?filter=${filter}`, {
+                method: "POST",
+                headers: {
+                    "X-Api-Key": apiKey
+                },
+                body: formData
+            });
+
+            if (response.ok) {
+                const blob = await response.blob();
+                document.getElementById("resultImage").src = URL.createObjectURL(blob);
+            } else {
+                alert("Error: " + response.status + " " + response.statusText);
+            }
+        });
+    </script>
+</body>
+</html>
